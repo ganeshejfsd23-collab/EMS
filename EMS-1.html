@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Employee Management System</title>
+  <style>
+    :root {
+      --primary: #1f6feb;
+      --bg: #f6f8fa;
+      --text: #24292f;
+      --border: #d0d7de;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    main {
+      max-width: 960px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 2px rgba(31, 35, 40, 0.04);
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.25rem;
+    }
+    form .row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      font-size: 0.95rem;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    button {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    button.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .error {
+      color: #b42318;
+      font-size: 0.9rem;
+      margin-top: 6px;
+      display: none;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 12px;
+      text-align: left;
+      vertical-align: middle;
+      font-size: 0.95rem;
+    }
+    thead th {
+      background: #f0f3f6;
+      font-weight: 700;
+    }
+    tbody tr:hover {
+      background: #fafbfc;
+    }
+    .table-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #e7f2ff;
+      color: #0b58c2;
+      font-size: 0.85rem;
+      border: 1px solid #c8e1ff;
+    }
+    footer {
+      text-align: center;
+      color: #57606a;
+      padding: 16px;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Employee Management System</h1>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Add employee</h2>
+      <form id="employeeForm" autocomplete="on" novalidate>
+        <div class="row">
+          <div>
+            <label for="name">Full name</label>
+            <input type="text" id="name" name="name" placeholder="e.g., Priya Sharma" required />
+          </div>
+          <div>
+            <label for="id">Employee ID</label>
+            <input type="text" id="id" name="id" placeholder="e.g., EMP1024" required />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="department">Department</label>
+            <select id="department" name="department" required>
+              <option value="" disabled selected>Select department</option>
+              <option>Engineering</option>
+              <option>Sales</option>
+              <option>Marketing</option>
+              <option>HR</option>
+              <option>Finance</option>
+              <option>Operations</option>
+              <option>Support</option>
+            </select>
+          </div>
+          <div>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="e.g., priya.sharma@company.com" required />
+          </div>
+        </div>
+        <div class="actions">
+          <button type="submit" class="primary">Add employee</button>
+          <button type="reset">Clear</button>
+        </div>
+        <p id="formError" class="error">Please fill all fields correctly and use a unique Employee ID.</p>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Employee directory</h2>
+      <div style="margin-bottom:10px;">
+        <span class="badge" id="employeeCount">0 employees</span>
+      </div>
+      <table aria-label="Employee list">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>ID</th>
+            <th>Department</th>
+            <th>Email</th>
+            <th style="width:140px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="employeeTableBody">
+          <!-- Rows will be injected here -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    Demo-only EMS (data stored in memory). Refresh clears the list.
+  </footer>
+
+  <script>
+    const form = document.getElementById('employeeForm');
+    const errorEl = document.getElementById('formError');
+    const tbody = document.getElementById('employeeTableBody');
+    const countBadge = document.getElementById('employeeCount');
+
+    const employees = new Map(); // id -> employee
+
+    function updateCount() {
+      const count = employees.size;
+      countBadge.textContent = count === 1 ? '1 employee' : `${count} employees`;
+    }
+
+    function validateForm({ name, id, department, email }) {
+      if (!name || !id || !department || !email) return false;
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(email)) return false;
+      return true;
+    }
+
+    function makeRow({ name, id, department, email }) {
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      tdName.textContent = name;
+
+      const tdId = document.createElement('td');
+      tdId.textContent = id;
+
+      const tdDept = document.createElement('td');
+      tdDept.textContent = department;
+
+      const tdEmail = document.createElement('td');
+      const a = document.createElement('a');
+      a.href = `mailto:${email}`;
+      a.textContent = email;
+      tdEmail.appendChild(a);
+
+      const tdActions = document.createElement('td');
+      tdActions.className = 'table-actions';
+
+      const editBtn = document.createElement('button');
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', () => editEmployee(id));
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', () => deleteEmployee(id));
+
+      tdActions.append(editBtn, deleteBtn);
+
+      tr.append(tdName, tdId, tdDept, tdEmail, tdActions);
+      return tr;
+    }
+
+    function renderTable() {
+      tbody.innerHTML = '';
+      for (const emp of employees.values()) {
+        tbody.appendChild(makeRow(emp));
+      }
+      updateCount();
+    }
+
+    function showError(show) {
+      errorEl.style.display = show ? 'block' : 'none';
+    }
+
+    function addEmployee(emp) {
+      employees.set(emp.id, emp);
+      renderTable();
+      showError(false);
+    }
+
+    function deleteEmployee(id) {
+      employees.delete(id);
+      renderTable();
+    }
+
+    function editEmployee(id) {
+      const emp = employees.get(id);
+      if (!emp) return;
+      // Populate form with employee data for editing
+      form.name.value = emp.name;
+      form.id.value = emp.id;
+      form.department.value = emp.department;
+      form.email.value = emp.email;
+      form.name.focus();
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = {
+        name: form.name.value.trim(),
+        id: form.id.value.trim(),
+        department: form.department.value,
+        email: form.email.value.trim(),
+      };
+
+      if (!validateForm(data)) {
+        showError(true);
+        return;
+      }
+      const isEdit = employees.has(data.id);
+      if (isEdit) {
+        employees.set(data.id, data);
+        renderTable();
+        showError(false);
+        form.reset();
+        return;
+      }
+      if (employees.has(data.id)) {
+        showError(true);
+        return;
+      }
+      addEmployee(data);
+      form.reset();
+    });
+
+    form.addEventListener('reset', () => showError(false));
+  </script>
+</body>
+</html>
